@@ -23,8 +23,8 @@ const PostSlider = () => {
     // afterChange: (index) =>
     //   console.log("afterChange", posts[postKeys[index]].text),
     // beforeChange: (current, next) => console.log("beforeChange", current, next),
-    onEdge: (direction) =>
-      console.log("onEdge", console.log("FETCH MORE POSTS", direction)),
+    // onEdge: (direction) =>
+    //   console.log("onEdge", console.log("FETCH MORE POSTS", direction)),
   };
 
   return (

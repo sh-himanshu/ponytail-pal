@@ -3,8 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { fetchPosts } from "../../features/posts/postsSlice";
-import { setLoading } from "../../features/toggle/toggleSlice";
-import { openPopUp } from "../../features/toggle/toggleSlice";
+import { setLoading, openPopUp } from "../../features/toggle/toggleSlice";
 import {
   currentCalendar,
   nextCalendar,
@@ -14,17 +13,22 @@ import LegendCode from "../legend-code";
 import Stars from "../stars";
 
 const Calendar = () => {
+  const dispatch = useAppDispatch();
+  const posts = useAppSelector((state) => state.posts);
   const isLoading = useAppSelector(({ toggle }) => toggle.isLoading);
   const setIsLoading = (value: boolean) => dispatch(setLoading(value));
-
   const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [calendar, setCalendar] = useState(currentCalendar());
+  const scrollArea = useRef<HTMLDivElement | null>(null);
+  const [topRef, topInView] = useInView({ threshold: 0 });
+  const [bottomRef, bottomInView] = useInView({ threshold: 0 });
 
-  const scrollArea = useRef<HTMLTableSectionElement | null>(null);
   const scrollAreaRef = useCallback(
-    (node: HTMLTableSectionElement) => {
+    (node: HTMLDivElement) => {
       if (node) {
         scrollArea.current = node;
 
+        // scroll to current date
         document.getElementById("today")?.scrollIntoView({
           behavior: "auto",
           block: "center",
@@ -39,14 +43,6 @@ const Calendar = () => {
     [scrollArea]
   );
 
-  const [calendar, setCalendar] = useState(currentCalendar());
-
-  const [topRef, topInView] = useInView({
-    threshold: 0,
-  });
-  const [bottomRef, bottomInView] = useInView({
-    threshold: 0,
-  });
   useEffect(() => {
     if (isLoading || (!topInView && !bottomInView)) return;
     setIsLoading(true);
@@ -63,13 +59,9 @@ const Calendar = () => {
     setIsLoading(false);
   }, [topInView, bottomInView]);
 
-  const dispatch = useAppDispatch();
-  const posts = useAppSelector((state) => state.posts);
-
   useEffect(() => {
     if (Object.keys(posts).length === 0) {
       dispatch(fetchPosts({ token: null, setHasMorePosts }));
-      console.log("FETCH/posts");
     } else {
       const lastPostDate = parse(
         Object.keys(posts).splice(-1)[0],
@@ -77,7 +69,7 @@ const Calendar = () => {
         new Date()
       );
       const lastCalendarDate = calendar[0][0];
-      console.log(hasMorePosts);
+
       if (hasMorePosts && lastCalendarDate < lastPostDate) {
         dispatch(
           fetchPosts({
@@ -104,7 +96,8 @@ const Calendar = () => {
           {week.map((day) => {
             const today = isToday(day);
             const dayStr = day.getDate().toString();
-            const postData = posts[format(day, "dd-MM-yyyy")];
+            const dateStr = format(day, "dd-MM-yyyy");
+            const postData = posts[dateStr];
 
             return (
               <div
@@ -135,9 +128,7 @@ const Calendar = () => {
                   <img
                     src={postData.media}
                     className="overflow-hidden object-center object-cover  w-full mb-1"
-                    onClick={() =>
-                      dispatch(openPopUp(format(day, "dd-MM-yyyy")))
-                    }
+                    onClick={() => dispatch(openPopUp(dateStr))}
                   />
                 )}
                 {postData?.typeofday && (

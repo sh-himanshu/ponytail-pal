@@ -17,7 +17,7 @@ const Header = () => {
         {WEEK.map((weekName, weekNameIndex) => (
           <div
             key={`weekName-${weekNameIndex}`}
-            className="basis-1/6 font-semibold text-sm lg:text-md"
+            className="flex-1 font-semibold text-sm lg:text-md"
           >
             {weekName}
           </div>
