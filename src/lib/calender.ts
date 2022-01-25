@@ -1,46 +1,51 @@
 import {
-  startOfMonth,
-  startOfWeek,
+  eachDayOfInterval,
   endOfMonth,
   endOfWeek,
+  startOfMonth,
+  startOfWeek,
   addDays,
-  startOfDay,
+  subDays,
+  subMonths,
+  addMonths,
 } from "date-fns";
 
-const selectedDate = new Date();
+export type CalendarMonth = Array<Array<Date>>;
 
-const startDate = startOfWeek(startOfMonth(selectedDate));
-const endDate = endOfWeek(endOfMonth(selectedDate));
+export const WEEK = ["S", "M", "T", "W", "T", "F", "S"] as const;
 
-export const weekGen = (start = new Date()) => {
-  let date = startOfWeek(startOfDay(start));
-  return () => {
-    const week = [...Array(7)].map((_, i) => addDays(date, i));
-    date = addDays(week[6], 1);
-    return week;
-  };
+const genCalendar = (start: Date, end: Date) => {
+  const days = eachDayOfInterval({ start, end });
+
+  const month: CalendarMonth = [];
+
+  // divide days into weeks and push into month
+  while (days.length !== 0) {
+    month.push(days.splice(0, 7));
+  }
+  return month;
 };
 
-export const monthGen = (start = new Date()) => {
-  let month: Array<Array<Date>> = [];
-  let date = start;
+const prevCalendarDate = (date: Date) => startOfWeek(startOfMonth(date));
 
-  const lastDayOfRange = <T>(range: Array<Array<T>>) =>
-    range[range.length - 1][6];
+const nextCalendarDate = (date: Date) => endOfWeek(endOfMonth(date));
 
-  return () => {
-    const weekGenerator = weekGen(startOfMonth(date));
-    const endDate = startOfDay(endOfWeek(endOfMonth(date)));
-    month.push(weekGenerator());
+export const currentCalendar = (date = new Date()) => {
+  const startDate = prevCalendarDate(subMonths(date, 2));
+  const endDate = nextCalendarDate(addMonths(date, 2));
+  return genCalendar(startDate, endDate);
+};
 
-    while (lastDayOfRange(month) < endDate) {
-      month.push(weekGenerator());
-    }
+export const nextCalendar = (calendar: CalendarMonth) => {
+  const lastDate = calendar[calendar.length - 1].slice(-1)[0];
+  const startDate = addDays(lastDate, 1);
+  const endDate = nextCalendarDate(startDate);
+  return [...calendar, ...genCalendar(startDate, endDate)];
+};
 
-    const range = month;
-    month = [];
-    date = addDays(lastDayOfRange(range), 1);
-
-    return range;
-  };
+export const prevCalendar = (calendar: CalendarMonth) => {
+  const firstDate = calendar[0][0];
+  const endDate = subDays(firstDate, 1);
+  const startDate = prevCalendarDate(endDate);
+  return [...genCalendar(startDate, endDate), ...calendar];
 };

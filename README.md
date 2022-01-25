@@ -4,6 +4,12 @@
 
 ### Tech Stack
 
-- Vite.js (React + TS)
+- Vite.js + Typescript
 - Redux
 - TailwindCSS
+
+### Screenshots
+
+|                  Wide Screen                   |                  Full Posts                  |                  Mobile View                   |
+| :--------------------------------------------: | :------------------------------------------: | :--------------------------------------------: |
+| ![wide screen](/screenshots/img1.png?raw=true) | ![full post](/screenshots/img2.png?raw=true) | ![mobile view](/screenshots/img3.png?raw=true) |
