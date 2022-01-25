@@ -3,7 +3,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { fetchPosts } from "../../features/posts/postsSlice";
-import { setLoading, openPopUp } from "../../features/toggle/toggleSlice";
+import {
+  setLoading,
+  openPopUp,
+  setSelectedDay,
+} from "../../features/toggle/toggleSlice";
 import {
   currentCalendar,
   nextCalendar,
@@ -15,6 +19,7 @@ import Stars from "../stars";
 const Calendar = () => {
   const dispatch = useAppDispatch();
   const posts = useAppSelector((state) => state.posts);
+  const seletedDay = useAppSelector((state) => state.toggle.seletedDay);
   const isLoading = useAppSelector(({ toggle }) => toggle.isLoading);
   const setIsLoading = (value: boolean) => dispatch(setLoading(value));
   const [hasMorePosts, setHasMorePosts] = useState(true);
@@ -29,7 +34,7 @@ const Calendar = () => {
         scrollArea.current = node;
 
         // scroll to current date
-        document.getElementById("today")?.scrollIntoView({
+        document.getElementById("selected-date")?.scrollIntoView({
           behavior: "auto",
           block: "center",
           inline: "center",
@@ -94,22 +99,26 @@ const Calendar = () => {
       {calendar.map((week, weekIndex) => (
         <div key={`week-${weekIndex}`} className="flex">
           {week.map((day) => {
-            const today = isToday(day);
-            const dayStr = day.getDate().toString();
             const dateStr = format(day, "dd-MM-yyyy");
+            const isSeletedDate = seletedDay === dateStr;
+            const dayStr = day.getDate().toString();
+
             const postData = posts[dateStr];
 
             return (
               <div
-                id={today ? "today" : undefined}
+                id={isSeletedDate ? "selected-date" : undefined}
                 key={`day_${format(day, "dd-MM")}`}
                 className={` align-text-top h-28 text-xs items-center md:p-1 lg:text-sm text-center flex flex-col border-gray-100 font-bold flex-1 overflow-hidden ${
-                  today
+                  isSeletedDate
                     ? "bg-cyan-50 border-2 border-slate-700 rounded-sm"
                     : isSunday(day)
                     ? "bg-zinc-200 border"
                     : "border"
                 } `}
+                onClick={() =>
+                  !isSeletedDate && dispatch(setSelectedDay(dateStr))
+                }
               >
                 {isFirstDayOfMonth(day) ? (
                   <div className="flex w-full justify-center">

@@ -1,8 +1,10 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { format } from "date-fns";
 
 export const toggleInitialState = {
   isLoading: true,
   popUp: { show: false, date: undefined as undefined | string },
+  seletedDay: format(new Date(), "dd-MM-yyyy"),
 };
 
 const toggleSlice = createSlice({
@@ -10,13 +12,13 @@ const toggleSlice = createSlice({
   initialState: toggleInitialState,
   reducers: {
     openPopUp: (
-      { isLoading },
+      state,
       {
         payload: date,
       }: PayloadAction<typeof toggleInitialState["popUp"]["date"]>
     ) => {
       return {
-        isLoading,
+        ...state,
         popUp: { show: true, date },
       };
     },
@@ -29,9 +31,13 @@ const toggleSlice = createSlice({
     setLoading: (state, { payload }: PayloadAction<boolean>) => {
       return { ...state, isLoading: payload };
     },
+    setSelectedDay: (state, { payload: seletedDay }: PayloadAction<string>) => {
+      return { ...state, seletedDay };
+    },
     resetAll: () => toggleInitialState,
   },
 });
 
-export const { openPopUp, setLoading, closePopUp } = toggleSlice.actions;
+export const { openPopUp, setLoading, closePopUp, setSelectedDay } =
+  toggleSlice.actions;
 export default toggleSlice.reducer;
