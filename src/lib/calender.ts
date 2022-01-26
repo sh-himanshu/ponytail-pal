@@ -26,16 +26,17 @@ const genCalendar = (start: Date, end: Date) => {
   return month;
 };
 
-const prevCalendarDate = (date: Date) => startOfWeek(startOfMonth(date));
+const prevCalendarDate = (date: Date, months: number = 1) =>
+  startOfWeek(startOfMonth(subMonths(date, months)));
 
-const nextCalendarDate = (date: Date) => endOfWeek(endOfMonth(date));
+const nextCalendarDate = (date: Date, months: number = 1) =>
+  endOfWeek(endOfMonth(addMonths(date, months)));
 
-export const currentCalendar = (date = new Date()) => {
-  const startDate = prevCalendarDate(subMonths(date, 2));
-  const endDate = nextCalendarDate(addMonths(date, 2));
-  return genCalendar(startDate, endDate);
-};
+// 3 months calendar - (currentMonth - 1, currentMonth, currentMonth + 1)
+export const defaultCalendar = (date = new Date()) =>
+  genCalendar(prevCalendarDate(date), nextCalendarDate(date));
 
+// get next 2 months calendar
 export const nextCalendar = (calendar: CalendarMonth) => {
   const lastDate = calendar[calendar.length - 1].slice(-1)[0];
   const startDate = addDays(lastDate, 1);
@@ -43,6 +44,7 @@ export const nextCalendar = (calendar: CalendarMonth) => {
   return [...calendar, ...genCalendar(startDate, endDate)];
 };
 
+// get prev 2 months calendar
 export const prevCalendar = (calendar: CalendarMonth) => {
   const firstDate = calendar[0][0];
   const endDate = subDays(firstDate, 1);

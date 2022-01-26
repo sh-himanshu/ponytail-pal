@@ -11,7 +11,7 @@ interface FullPostProps {
 
 const FullPost = ({ post, date }: FullPostProps) => {
   return (
-    <div className="h-[35rem] w-[100%] px-5 mx-auto  max-w-sm ">
+    <div className="h-[35rem] w-[100%] px-5 mx-auto  max-w-sm flex">
       <div className="flex flex-col bg-gray-50 rounded-md shadow-md overflow-hidden">
         <img
           src={post.media}

@@ -5,8 +5,8 @@ import { useAppSelector } from "../../app/hooks";
 import { WEEK } from "../../lib/calender";
 
 const Header = () => {
-  const seletedDay = parse(
-    useAppSelector((state) => state.toggle.seletedDay),
+  const selectedDay = parse(
+    useAppSelector((state) => state.toggle.currentMonth),
     "dd-MM-yyyy",
     new Date()
   );
@@ -19,8 +19,8 @@ const Header = () => {
           <span className="mr-1 text-cyan-500">my</span>hair diary
         </div>
         <div className="ml-auto mr-5 lg:mr-10">
-          {format(seletedDay, "MMM")}
-          <span className="font-[400] ml-1">{seletedDay.getFullYear()}</span>
+          {format(selectedDay, "MMM")}
+          <span className="font-[400] ml-1">{selectedDay.getFullYear()}</span>
         </div>
       </div>
       <div className="p-1 w-full flex text-center">

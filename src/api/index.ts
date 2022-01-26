@@ -32,7 +32,7 @@ export interface ResponseData {
   }[];
 }
 
-export const fetchPosts = (token: Token | null = null, count: number = 35) =>
+export const fetchPosts = (token: Token | null = null, count: number = 40) =>
   axios.post<ResponseData>("https://api.quinn.care/graph", {
     requestobjects: [
       {

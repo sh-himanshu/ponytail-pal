@@ -1,69 +1,37 @@
-import { format, isFirstDayOfMonth, isSunday, isToday, parse } from "date-fns";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useInView } from "react-intersection-observer";
+import {
+  format,
+  isFirstDayOfMonth,
+  isSameMonth,
+  isSunday,
+  parse,
+} from "date-fns";
+import { useCallback, useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../app/hooks";
 import { fetchPosts } from "../../features/posts/postsSlice";
+import { openPopUp, setCurrentMonth } from "../../features/toggle/toggleSlice";
 import {
-  setLoading,
-  openPopUp,
-  setSelectedDay,
-} from "../../features/toggle/toggleSlice";
-import {
-  currentCalendar,
+  defaultCalendar,
   nextCalendar,
   prevCalendar,
 } from "../../lib/calender";
 import LegendCode from "../legend-code";
 import Stars from "../stars";
+import FirstDayofMonth from "./FirstDayofMonth";
+import InfiniteScroll from "./InfiniteScroll";
 
 const Calendar = () => {
   const dispatch = useAppDispatch();
-  const posts = useAppSelector((state) => state.posts);
-  const seletedDay = useAppSelector((state) => state.toggle.seletedDay);
-  const isLoading = useAppSelector(({ toggle }) => toggle.isLoading);
-  const setIsLoading = (value: boolean) => dispatch(setLoading(value));
+  const [posts, currentMonth] = useAppSelector((state) => [
+    state.posts,
+    state.toggle.currentMonth,
+  ]);
+
   const [hasMorePosts, setHasMorePosts] = useState(true);
-  const [calendar, setCalendar] = useState(currentCalendar());
-  const scrollArea = useRef<HTMLDivElement | null>(null);
-  const [topRef, topInView] = useInView({ threshold: 0 });
-  const [bottomRef, bottomInView] = useInView({ threshold: 0 });
+  const [calendar, setCalendar] = useState(defaultCalendar());
+  const [selectedDay, setSelectedDay] = useState(currentMonth);
+  const currentActiveMonth = parse(currentMonth, "dd-MM-yyyy", new Date());
 
-  const scrollAreaRef = useCallback(
-    (node: HTMLDivElement) => {
-      if (node) {
-        scrollArea.current = node;
-
-        // scroll to current date
-        document.getElementById("selected-date")?.scrollIntoView({
-          behavior: "auto",
-          block: "center",
-          inline: "center",
-        });
-
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 100);
-      }
-    },
-    [scrollArea]
-  );
-
-  useEffect(() => {
-    if (isLoading || (!topInView && !bottomInView)) return;
-    setIsLoading(true);
-
-    if (topInView) {
-      setCalendar(prevCalendar(calendar).slice(0, 40));
-      scrollArea.current?.scrollBy(0, 10);
-    }
-
-    if (bottomInView) {
-      setCalendar(nextCalendar(calendar).slice(-40));
-      scrollArea.current?.scrollBy(0, -10);
-    }
-    setIsLoading(false);
-  }, [topInView, bottomInView]);
-
+  // fetch new posts while continuation token is not null
   useEffect(() => {
     if (Object.keys(posts).length === 0) {
       dispatch(fetchPosts({ token: null, setHasMorePosts }));
@@ -89,68 +57,85 @@ const Calendar = () => {
     }
   }, [calendar]);
 
+  // scroll to Today on load
+  const scrollRef = useCallback(
+    () =>
+      setTimeout(
+        async () =>
+          document?.getElementById("selected-date")?.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "center",
+          }),
+        100
+      ),
+    []
+  );
+
   return (
-    <div
-      ref={scrollAreaRef}
-      className="flex flex-col w-full h-full overflow-y-auto scroll-smooth hide-scrollbar "
+    <InfiniteScroll
+      onScrollTop={() => setCalendar(prevCalendar(calendar).slice(0, 30))}
+      onScrollBottom={() => setCalendar(nextCalendar(calendar).slice(-30))}
+      className="overflow-y-auto hide-scrollbar scroll-smooth w-full h-full"
     >
-      <div ref={topRef} className="h-8 w-full "></div>
+      <div ref={scrollRef}>
+        {calendar.map((week, weekIndex) => (
+          <div key={`week-${weekIndex}`} className="flex">
+            {week.map((day) => {
+              const dateStr = format(day, "dd-MM-yyyy");
+              const isSeletedDate = selectedDay === dateStr;
+              const dayStr = day.getDate().toString();
 
-      {calendar.map((week, weekIndex) => (
-        <div key={`week-${weekIndex}`} className="flex">
-          {week.map((day) => {
-            const dateStr = format(day, "dd-MM-yyyy");
-            const isSeletedDate = seletedDay === dateStr;
-            const dayStr = day.getDate().toString();
+              const postData = posts[dateStr];
 
-            const postData = posts[dateStr];
+              return (
+                <div
+                  id={isSeletedDate ? "selected-date" : undefined}
+                  data-date={dateStr}
+                  key={`day_${format(day, "dd-MM")}`}
+                  className={` align-text-top h-28 text-xs items-center md:p-1 lg:text-sm text-center flex flex-col border-gray-100 font-bold flex-1 overflow-hidden  ${
+                    isSeletedDate
+                      ? "bg-cyan-50 border-2 border-slate-700 rounded-sm"
+                      : isSunday(day)
+                      ? "bg-zinc-200 border"
+                      : "border"
+                  } ${
+                    isSameMonth(currentActiveMonth, day)
+                      ? "text-gray-300 grayscale-[75%]"
+                      : ""
+                  }`}
+                  onClick={() => !isSeletedDate && setSelectedDay(dateStr)}
+                >
+                  {isFirstDayOfMonth(day) ? (
+                    <FirstDayofMonth
+                      dayStr={dayStr}
+                      monthStr={format(day, "MMM")}
+                      onEntry={() => dispatch(setCurrentMonth(dateStr))}
+                    />
+                  ) : (
+                    <div>{dayStr}</div>
+                  )}
 
-            return (
-              <div
-                id={isSeletedDate ? "selected-date" : undefined}
-                key={`day_${format(day, "dd-MM")}`}
-                className={` align-text-top h-28 text-xs items-center md:p-1 lg:text-sm text-center flex flex-col border-gray-100 font-bold flex-1 overflow-hidden ${
-                  isSeletedDate
-                    ? "bg-cyan-50 border-2 border-slate-700 rounded-sm"
-                    : isSunday(day)
-                    ? "bg-zinc-200 border"
-                    : "border"
-                } `}
-                onClick={() =>
-                  !isSeletedDate && dispatch(setSelectedDay(dateStr))
-                }
-              >
-                {isFirstDayOfMonth(day) ? (
-                  <div className="flex w-full justify-center">
-                    <span>{dayStr}</span>
-                    <span className="text-slate-400 ml-2 ">
-                      {format(day, "MMM")}
-                    </span>
-                  </div>
-                ) : (
-                  <div>{dayStr}</div>
-                )}
+                  {postData && <Stars rating={postData.rating} />}
 
-                {postData && <Stars rating={postData.rating} />}
-
-                {postData?.media && (
-                  <img
-                    src={postData.media}
-                    className="overflow-hidden object-center object-cover  w-full mb-1"
-                    onClick={() => dispatch(openPopUp(dateStr))}
-                  />
-                )}
-                {postData?.typeofday && (
-                  <LegendCode typeofday={postData.typeofday} />
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ))}
-
-      <div ref={bottomRef} className="h-8 w-full"></div>
-    </div>
+                  {postData?.media && (
+                    <img
+                      src={postData.media}
+                      className="overflow-hidden object-center object-cover  w-full mb-1"
+                      onClick={() => dispatch(openPopUp(dateStr))}
+                      loading="lazy"
+                    />
+                  )}
+                  {postData?.typeofday && (
+                    <LegendCode typeofday={postData.typeofday} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </InfiniteScroll>
   );
 };
 
