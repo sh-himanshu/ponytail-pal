@@ -37,7 +37,7 @@ export const fetchPosts = createAsyncThunk(
   "posts/FETCH",
   async ({ token = null, setHasMorePosts }: fetchPostsParams, thunkAPI) => {
     try {
-      const resp = await api.fetchPosts(token);
+      const resp = await api.fetchPosts(token, token === null ? 40 : 32);
 
       if (resp.status === 200) {
         if (resp.data.responseobjects[0].continuationtoken === null)

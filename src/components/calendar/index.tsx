@@ -76,7 +76,7 @@ const Calendar = () => {
     <InfiniteScroll
       onScrollTop={() => setCalendar(prevCalendar(calendar).slice(0, 30))}
       onScrollBottom={() => setCalendar(nextCalendar(calendar).slice(-30))}
-      className="overflow-y-auto hide-scrollbar scroll-smooth w-full h-full"
+      className="overflow-y-auto hide-scrollbar  w-full h-full"
     >
       <div ref={scrollRef}>
         {calendar.map((week, weekIndex) => (
@@ -100,7 +100,7 @@ const Calendar = () => {
                       ? "bg-zinc-200 border"
                       : "border"
                   } ${
-                    isSameMonth(currentActiveMonth, day)
+                    !isSameMonth(currentActiveMonth, day)
                       ? "text-gray-300 grayscale-[75%]"
                       : ""
                   }`}
